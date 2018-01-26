@@ -37,7 +37,8 @@ enum planck_keycodes {
   LOWER,
   RAISE,
   BACKLIT,
-  EXT_PLV
+  EXT_PLV,
+  MACRO_COLON_EQUAL
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -116,19 +117,19 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 /* Lower
  * ,-----------------------------------------------------------------------------------.
- * |   `  |      |      |  Up  |      |Pg Up |      |      |  F1  |  F2  |  F3  |  F4  |
+ * |   `  |      |      |  Up  |      |Pg Up |      |  F1  |  F2  |  F3  |  F4  |      |
  * |------+------+------+------+------+-------------+------+------+------+------+------|
- * | Ctrl | CADwn| Left | Down |Right |Pg Dn |      |      |  F5  |  F6  |  F7  |  F8  |
+ * | Ctrl | CADwn| Left | Down |Right |Pg Dn |      |  F5  |  F6  |  F7  |  F8  |  :=  |
  * |------+------+------+------+------+------|------+------+------+------+------+------|
- * |      |      | Home |      |  End |      |      |      |  F9  |  F10 |  F11 |  F12 |
+ * |      |      | Home |      |  End |      |      |  F9  |  F10 |  F11 |  F12 |      |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
  * |      |      |      |      |      |Space |   -  |Shift | Next | Vol- | Vol+ | Play |
  * `-----------------------------------------------------------------------------------'
  */
 [_LOWER] = {
-  {KC_GRV,  _______,             _______, KC_UP,   _______, KC_PGUP, _______, _______, KC_F1,   KC_F2,   KC_F3,   KC_F4  },
-  {KC_LCTL, LGUI(LALT(KC_DOWN)), KC_LEFT, KC_DOWN, KC_RGHT, KC_PGDN, _______, _______, KC_F5,   KC_F6,   KC_F7,   KC_F8  },
-  {_______, _______,             KC_HOME, _______, KC_END,  _______, _______, _______, KC_F9,   KC_F10,  KC_F11,  KC_F12 },
+  {KC_GRV,  _______,             _______, KC_UP,   _______, KC_PGUP, _______, KC_F1,   KC_F2,   KC_F3,   KC_F4,   _______},
+  {KC_LCTL, LGUI(LALT(KC_DOWN)), KC_LEFT, KC_DOWN, KC_RGHT, KC_PGDN, _______, KC_F5,   KC_F6,   KC_F7,   KC_F8,   MACRO_COLON_EQUAL},
+  {_______, _______,             KC_HOME, _______, KC_END,  _______, _______, KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______},
   {_______, _______,             KC_LALT, KC_LGUI, _______, KC_SPC,  KC_MINS, KC_LSFT, KC_MNXT, KC_VOLD, KC_VOLU, KC_MPLY}
 },
 
@@ -290,6 +291,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           PLAY_SONG(plover_gb_song);
         #endif
         layer_off(_PLOVER);
+      }
+      return false;
+      break;
+    case MACRO_COLON_EQUAL:
+      if (record->event.pressed) {
+        SEND_STRING(":=");
       }
       return false;
       break;
