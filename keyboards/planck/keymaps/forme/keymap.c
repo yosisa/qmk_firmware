@@ -38,8 +38,11 @@ enum planck_keycodes {
   RAISE,
   BACKLIT,
   EXT_PLV,
-  MACRO_COLON_EQUAL
+  MACRO_COLON_EQUAL,
+  DYNAMIC_MACRO_RANGE
 };
+
+#include "dynamic_macro.h"
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
@@ -117,20 +120,20 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 /* Lower
  * ,-----------------------------------------------------------------------------------.
- * |   `  |      |      |  Up  |      |Pg Up |      |  F1  |  F2  |  F3  |  F4  |      |
+ * |   `  |      | Home |  Up  |  End |Pg Up |      |  F1  |  F2  |  F3  |  F4  |      |
  * |------+------+------+------+------+-------------+------+------+------+------+------|
  * | Ctrl | CADwn| Left | Down |Right |Pg Dn |      |  F5  |  F6  |  F7  |  F8  |  :=  |
  * |------+------+------+------+------+------|------+------+------+------+------+------|
- * |      |      | Home |      |  End |      |      |  F9  |  F10 |  F11 |  F12 |      |
+ * |      |DMPLY1|DMPLY2|      |      |      |      |  F9  |  F10 |  F11 |  F12 |      |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
  * |      |      |      |      |      |Space |   -  |      | Next | Vol- | Vol+ | Play |
  * `-----------------------------------------------------------------------------------'
  */
 [_LOWER] = {
-  {KC_GRV,  _______,             _______, KC_UP,   _______, KC_PGUP, _______, KC_F1,   KC_F2,   KC_F3,   KC_F4,   _______},
-  {KC_LCTL, LGUI(LALT(KC_DOWN)), KC_LEFT, KC_DOWN, KC_RGHT, KC_PGDN, _______, KC_F5,   KC_F6,   KC_F7,   KC_F8,   MACRO_COLON_EQUAL},
-  {_______, _______,             KC_HOME, _______, KC_END,  _______, _______, KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______},
-  {_______, _______,             KC_LALT, KC_LGUI, _______, KC_SPC,  KC_MINS, _______, KC_MNXT, KC_VOLD, KC_VOLU, KC_MPLY}
+  {KC_GRV,  _______,             KC_HOME,         KC_UP,   KC_END,  KC_PGUP, _______, KC_F1,   KC_F2,   KC_F3,   KC_F4,   _______},
+  {KC_LCTL, LGUI(LALT(KC_DOWN)), KC_LEFT,         KC_DOWN, KC_RGHT, KC_PGDN, _______, KC_F5,   KC_F6,   KC_F7,   KC_F8,   MACRO_COLON_EQUAL},
+  {_______, DYN_MACRO_PLAY1,     DYN_MACRO_PLAY2, _______, _______, _______, _______, KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______},
+  {_______, _______,             KC_LALT,         KC_LGUI, _______, KC_SPC,  KC_MINS, _______, KC_MNXT, KC_VOLD, KC_VOLU, KC_MPLY}
 },
 
 /* Raise
@@ -194,16 +197,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+-------------+------+------+------+------+------|
  * |      |      |      |Aud on|Audoff|AGnorm|AGswap|Qwerty|Colemk|Dvorak|Plover|      |
  * |------+------+------+------+------+------|------+------+------+------+------+------|
- * |      |Voice-|Voice+|Mus on|Musoff|MIDIon|MIDIof|      |      |      |      |      |
+ * | DMSTP|DMREC1|DMREC2|Mus on|Musoff|MIDIon|MIDIof|      |      |      |      |      |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
  * |      |      |      |      |      |             |      |      |      |      |      |
  * `-----------------------------------------------------------------------------------'
  */
 [_ADJUST] = {
-  {_______, RESET,   DEBUG,   _______, _______, _______, _______, TERM_ON, TERM_OFF,_______, _______, KC_DEL },
-  {_______, _______, MU_MOD,  AU_ON,   AU_OFF,  AG_NORM, AG_SWAP, QWERTY,  COLEMAK, DVORAK,  PLOVER,  _______},
-  {_______, MUV_DE,  MUV_IN,  MU_ON,   MU_OFF,  MI_ON,   MI_OFF,  _______, _______, _______, _______, _______},
-  {_______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______}
+  {_______,      RESET,          DEBUG,          _______, _______, _______, _______, TERM_ON, TERM_OFF,_______, _______, KC_DEL },
+  {_______,      _______,        MU_MOD,         AU_ON,   AU_OFF,  AG_NORM, AG_SWAP, QWERTY,  COLEMAK, DVORAK,  PLOVER,  _______},
+  {DYN_REC_STOP, DYN_REC_START1, DYN_REC_START2, MU_ON,   MU_OFF,  MI_ON,   MI_OFF,  _______, _______, _______, _______, _______},
+  {_______,      _______,        _______,        _______, _______, _______, _______, _______, _______, _______, _______, _______}
 }
 
 
@@ -217,8 +220,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 static keyrecord_t last_record = {};
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  bool next;
+  if (!process_record_dynamic_macro(keycode, record)) {
+    return false;
+  }
 
+  bool next;
   switch (keycode) {
     case QWERTY:
       if (record->event.pressed) {
