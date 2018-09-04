@@ -26,7 +26,8 @@ enum planck_layers {
   _LOWER,
   _RAISE,
   _PLOVER,
-  _ADJUST
+  _ADJUST,
+  _YOPPY,
 };
 
 enum planck_keycodes {
@@ -39,7 +40,8 @@ enum planck_keycodes {
   BACKLIT,
   EXT_PLV,
   MACRO_COLON_EQUAL,
-  DYNAMIC_MACRO_RANGE
+  DYNAMIC_MACRO_RANGE,
+  YOPPY
 };
 
 #include "dynamic_macro.h"
@@ -205,10 +207,17 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 [_ADJUST] = {
   {RESET,        _______,        DEBUG,          _______, _______, _______, _______, TERM_ON, TERM_OFF,_______, _______, KC_DEL },
   {_______,      _______,        MU_MOD,         AU_ON,   AU_OFF,  AG_NORM, AG_SWAP, QWERTY,  COLEMAK, DVORAK,  PLOVER,  _______},
-  {DYN_REC_STOP, DYN_REC_START1, DYN_REC_START2, MU_ON,   MU_OFF,  MI_ON,   MI_OFF,  _______, _______, _______, _______, _______},
+  {DYN_REC_STOP, DYN_REC_START1, DYN_REC_START2, MU_ON,   MU_OFF,  MI_ON,   MI_OFF,  YOPPY,  _______, _______, _______, _______},
   {_______,      _______,        _______,        _______, _______, _______, _______, _______, _______, _______, _______, _______}
-}
+},
 
+[_YOPPY] = {
+  {MT(MOD_HYPR, KC_TAB), KC_Q,    KC_W,    KC_E,    KC_COMM, KC_DOT, KC_SLSH, KC_M,  KC_R,    KC_Y,    KC_P,    KC_MINS},
+  {MT(MOD_LCTL, KC_ESC), KC_A,    KC_O,    KC_U,    KC_I,    KC_F,   KC_G,    KC_N,  KC_K,    KC_T,    KC_S,    KC_QUOT},
+  {KC_BSLS,              KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,   KC_D,    KC_H,  KC_J,    KC_L,    KC_SLSH, KC_SCLN},
+  {KC_GRV,               KC_BSLS, KC_LALT, KC_LGUI, LOWER,   KC_SPC, KC_ENT,  RAISE, KC_LSFT, KC_BSPC, KC_RGHT, KC_DOWN}
+
+}
 
 };
 
@@ -230,6 +239,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       if (record->event.pressed) {
         print("mode just switched to qwerty and this is a huge string\n");
         set_single_persistent_default_layer(_QWERTY);
+      }
+      break;
+    case YOPPY:
+      if (record->event.pressed) {
+        set_single_persistent_default_layer(_YOPPY);
       }
       break;
     case COLEMAK:
