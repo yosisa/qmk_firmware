@@ -167,6 +167,20 @@ uint32_t layer_state_set_user(uint32_t state) {
 
 static keyrecord_t last_record = {};
 static keyrecord_t magic_mod = {};
+static bool magic_pressed = false;
+static bool magic_space_pressed = false;
+
+void process_magic_mod(keyrecord_t *record) {
+  if (!IS_NOEVENT(magic_mod.event)) {
+    if (TIMER_DIFF_16(record->event.time, magic_mod.event.time) < MAGIC_MOD_TERM) {
+      register_mods(MOD_LGUI);
+    } else {
+      register_mods(MOD_LCTL);
+    }
+    magic_pressed = true;
+    magic_mod = (keyrecord_t){};
+  }
+}
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   bool next = true;
@@ -205,15 +219,26 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       next = false;
       break;
     case RAISE:
+      process_magic_mod(record);
       if (record->event.pressed) {
-        layer_on(_RAISE);
+        if (magic_pressed) {
+          magic_space_pressed = true;
+          register_code(KC_SPACE);
+        } else {
+          layer_on(_RAISE);
+        }
       } else {
-        layer_off(_RAISE);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
+        if (magic_space_pressed) {
+          magic_space_pressed = false;
+          unregister_code(KC_SPACE);
+        } else {
+          layer_off(_RAISE);
+          update_tri_layer(_LOWER, _RAISE, _ADJUST);
 
-        if (IS_LAYER_OFF(_LOWER) && KEYEQ(record->event.key, last_record.event.key) && TIMER_DIFF_16(record->event.time, last_record.event.time) < TAPPING_TERM) {
-          register_code(KC_LANG1);
-          unregister_code(KC_LANG1);
+          if (IS_LAYER_OFF(_LOWER) && KEYEQ(record->event.key, last_record.event.key) && TIMER_DIFF_16(record->event.time, last_record.event.time) < TAPPING_TERM) {
+            register_code(KC_LANG1);
+            unregister_code(KC_LANG1);
+          }
         }
       }
       next = false;
@@ -224,14 +249,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           register_code(KC_LANG2);
         } else if (record->tap.interrupted) {
           magic_mod = *record;
-        } else  {
+        } else {
           register_mods(MOD_LCTL);
+          magic_pressed = true;
         }
       } else {
         if (record->tap.count > 0) {
           unregister_code(KC_LANG2);
         } else {
           magic_mod = (keyrecord_t){};
+          magic_pressed = false;
           unregister_mods(MOD_LCTL);
           unregister_mods(MOD_LGUI);
         }
@@ -239,14 +266,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       next = false;
       break;
     default:
-      if (!IS_NOEVENT(magic_mod.event)) {
-        if (TIMER_DIFF_16(record->event.time, magic_mod.event.time) < MAGIC_MOD_TERM) {
-          register_mods(MOD_LGUI);
-        } else {
-          register_mods(MOD_LCTL);
-        }
-        magic_mod = (keyrecord_t){};
-      }
+      process_magic_mod(record);
+      break;
   }
 
   last_record = *record;
