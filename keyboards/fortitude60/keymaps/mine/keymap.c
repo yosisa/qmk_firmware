@@ -28,6 +28,7 @@ enum custom_keycodes {
 #define XXXXXXX KC_NO
 #define LOWER MO(_LOWER)
 #define RAISE MO(_RAISE)
+#define MAGIC CTL_T(KC_LANG2)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
@@ -45,11 +46,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *               `---------------------------------------------------------------------'
  */
 [_QWERTY] = LAYOUT( \
-  KC_GRV,  KC_1,    KC_2,    KC_3,  KC_4,            KC_5,                   KC_6,            KC_7,  KC_8,    KC_9,    KC_0,    KC_EQL, \
-  KC_TAB,  KC_Q,    KC_W,    KC_E,  KC_R,            KC_T,                   KC_Y,            KC_U,  KC_I,    KC_O,    KC_P,    KC_BSPC, \
-  KC_ESC,  KC_A,    KC_S,    KC_D,  KC_F,            KC_G,                   KC_H,            KC_J,  KC_K,    KC_L,    KC_SCLN, KC_MINS, \
-  KC_BSLS, KC_Z,    KC_X,    KC_C,  KC_V,            KC_B, KC_LBRC, KC_RBRC, KC_N,            KC_M,  KC_COMM, KC_DOT,  KC_SLSH, KC_QUOT , \
-                 KC_LEFT, KC_LGUI, LOWER, CTL_T(KC_LANG2),  KC_SPC,  KC_ENT, SFT_T(KC_LANG1), RAISE, KC_LALT, KC_RGHT \
+  KC_GRV,  KC_1,    KC_2,    KC_3,  KC_4,  KC_5,                   KC_6,            KC_7,  KC_8,    KC_9,    KC_0,    KC_EQL, \
+  KC_TAB,  KC_Q,    KC_W,    KC_E,  KC_R,  KC_T,                   KC_Y,            KC_U,  KC_I,    KC_O,    KC_P,    KC_BSPC, \
+  KC_ESC,  KC_A,    KC_S,    KC_D,  KC_F,  KC_G,                   KC_H,            KC_J,  KC_K,    KC_L,    KC_SCLN, KC_MINS, \
+  KC_BSLS, KC_Z,    KC_X,    KC_C,  KC_V,  KC_B, KC_LBRC, KC_RBRC, KC_N,            KC_M,  KC_COMM, KC_DOT,  KC_SLSH, KC_QUOT , \
+                 KC_LEFT, KC_LGUI, LOWER, MAGIC,  KC_SPC,  KC_ENT, SFT_T(KC_LANG1), RAISE, KC_LALT, KC_RGHT \
 ),
 
 /* Colemak
@@ -165,6 +166,7 @@ uint32_t layer_state_set_user(uint32_t state) {
 }
 
 static keyrecord_t last_record = {};
+static keyrecord_t magic_mod = {};
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   bool next = true;
@@ -216,6 +218,35 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       }
       next = false;
       break;
+    case MAGIC:
+      if (record->event.pressed) {
+        if (record->tap.count > 0) {
+          register_code(KC_LANG2);
+        } else if (record->tap.interrupted) {
+          magic_mod = *record;
+        } else  {
+          register_mods(MOD_LCTL);
+        }
+      } else {
+        if (record->tap.count > 0) {
+          unregister_code(KC_LANG2);
+        } else {
+          magic_mod = (keyrecord_t){};
+          unregister_mods(MOD_LCTL);
+          unregister_mods(MOD_LGUI);
+        }
+      }
+      next = false;
+      break;
+    default:
+      if (!IS_NOEVENT(magic_mod.event)) {
+        if (TIMER_DIFF_16(record->event.time, magic_mod.event.time) < MAGIC_MOD_TERM) {
+          register_mods(MOD_LGUI);
+        } else {
+          register_mods(MOD_LCTL);
+        }
+        magic_mod = (keyrecord_t){};
+      }
   }
 
   last_record = *record;
