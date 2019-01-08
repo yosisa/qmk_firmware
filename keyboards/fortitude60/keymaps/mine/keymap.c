@@ -167,24 +167,26 @@ uint32_t layer_state_set_user(uint32_t state) {
 static keyrecord_t last_record = {};
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  bool next = true;
+
   switch (keycode) {
     case QWERTY:
       if (record->event.pressed) {
         set_single_persistent_default_layer(_QWERTY);
       }
-      return false;
+      next = false;
       break;
     case COLEMAK:
       if (record->event.pressed) {
         set_single_persistent_default_layer(_COLEMAK);
       }
-      return false;
+      next = false;
       break;
     case DVORAK:
       if (record->event.pressed) {
         set_single_persistent_default_layer(_DVORAK);
       }
-      return false;
+      next = false;
       break;
     case LOWER:
       if (record->event.pressed) {
@@ -198,7 +200,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           unregister_code(KC_LANG2);
         }
       }
-      return false;
+      next = false;
       break;
     case RAISE:
       if (record->event.pressed) {
@@ -212,10 +214,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           unregister_code(KC_LANG1);
         }
       }
-      return false;
+      next = false;
       break;
   }
 
   last_record = *record;
-  return true;
+  return next;
 }
