@@ -37,6 +37,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define TAPPING_TERM 150
 
-#define MAGIC_MOD_TERM 90
+#define MAGIC_MOD_TERM 80
 
 #endif
